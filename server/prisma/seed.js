@@ -2,6 +2,7 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const { seedReference } = require('./seed/reference');
 const { seedApplications } = require('./seed/applications');
+const { seedRouteRules } = require('./seed/routeRules');
 
 const prisma = new PrismaClient();
 
@@ -11,6 +12,7 @@ async function main() {
     return;
   }
   const ref = await seedReference(prisma);
+  await seedRouteRules(prisma);
   await seedApplications(prisma, ref);
   console.log('Seed complete');
 }

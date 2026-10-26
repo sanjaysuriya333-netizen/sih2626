@@ -92,4 +92,13 @@ function buildAlertRules() {
   return rules;
 }
 
-module.exports = { REGIONS, INSTITUTION_TYPES, ROUTES, HOLIDAYS, buildAlertRules };
+// Mirrors the route selection table in docs/routes.md.
+// Empty array = "any". Lowest priority number is checked first; first match wins.
+const ROUTE_RULES = [
+  { priority: 1, route: 'EVC + SAC/SHC', institutionTypes: [], newOrExisting: ['NEW'], programmeLevels: ['PG'] },
+  { priority: 2, route: 'Scrutiny + EVC', institutionTypes: [], newOrExisting: ['NEW'], programmeLevels: ['UG', 'DIPLOMA'] },
+  { priority: 3, route: 'Only EVC', institutionTypes: [], newOrExisting: ['EXISTING'], programmeLevels: ['PG'] },
+  { priority: 4, route: 'Only scrutiny', institutionTypes: [], newOrExisting: ['EXISTING'], programmeLevels: ['UG', 'DIPLOMA'] },
+];
+
+module.exports = { REGIONS, INSTITUTION_TYPES, ROUTES, HOLIDAYS, ROUTE_RULES, buildAlertRules };

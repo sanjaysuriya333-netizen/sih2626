@@ -150,6 +150,7 @@ model Route {
 
   stages       RouteStage[]
   applications Application[]
+  rules        RouteRule[]
 
   @@map("routes")
 }
@@ -168,6 +169,20 @@ model RouteStage {
 
   @@unique([routeId, orderNo])
   @@map("route_stages")
+}
+
+model RouteRule {
+  id               Int               @id @default(autoincrement())
+  priority         Int               @unique
+  routeId          Int               @map("route_id")
+  institutionTypes InstitutionType[] @map("institution_types")
+  newOrExisting    NewOrExisting[]   @map("new_or_existing")
+  programmeLevels  ProgrammeLevel[]  @map("programme_levels")
+  active           Boolean           @default(true)
+
+  route Route @relation(fields: [routeId], references: [id])
+
+  @@map("route_rules")
 }
 
 model Application {
