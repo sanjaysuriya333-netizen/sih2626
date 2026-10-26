@@ -11,7 +11,9 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "reset": "prisma migrate reset --force",
+    "seed:check": "node prisma/checkDemo.js"
   },
   "keywords": [],
   "author": "",
@@ -40,5 +42,8 @@
     "prettier": "^3.9.10",
     "supertest": "^7.3.1",
     "vitest": "^5.0.5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
