@@ -1,16 +1,38 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 
-// Links are placeholders; later stages add real screens
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/applications', label: 'Applications' },
-  { to: '/evc', label: 'EVC visits' },
-  { to: '/undertakings', label: 'Undertakings' },
-];
+// Menu per role. Links are placeholders until the later stages build the screens.
+const MENUS = {
+  OFFICER: [
+    { to: '/', label: 'My home' },
+    { to: '/applications', label: 'My applications' },
+    { to: '/evc', label: 'EVC visits' },
+    { to: '/undertakings', label: 'Undertakings' },
+  ],
+  SUPERVISOR: [
+    { to: '/', label: 'Team home' },
+    { to: '/applications', label: 'Team applications' },
+    { to: '/evc', label: 'EVC visits' },
+  ],
+  HEAD_OFFICE: [
+    { to: '/', label: 'Dashboard' },
+    { to: '/applications', label: 'All applications' },
+    { to: '/evc', label: 'EVC visits' },
+    { to: '/settings', label: 'Settings' },
+  ],
+  INSTITUTION: [
+    { to: '/', label: 'My institution' },
+    { to: '/applications', label: 'My applications' },
+    { to: '/undertakings', label: 'Promises' },
+  ],
+};
 
 export default function Sidebar() {
+  const { user, logout } = useAuth();
+  const links = MENUS[user?.role] || [];
+
   return (
-    <aside className="hidden w-56 shrink-0 bg-slate-800 p-4 text-slate-100 md:block">
+    <aside className="hidden w-56 shrink-0 flex-col bg-slate-800 p-4 text-slate-100 md:flex">
       <div className="mb-6 text-lg font-bold">SIH26262</div>
       <nav className="flex flex-col gap-1">
         {links.map((l) => (
@@ -26,6 +48,13 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <div className="mt-auto border-t border-slate-600 pt-3 text-sm">
+        <div className="truncate">{user?.name}</div>
+        <div className="mb-2 text-xs text-slate-400">{user?.role}</div>
+        <button onClick={logout} className="rounded bg-slate-700 px-3 py-1 hover:bg-slate-600">
+          Log out
+        </button>
+      </div>
     </aside>
   );
 }

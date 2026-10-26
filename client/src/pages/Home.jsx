@@ -1,16 +1,22 @@
-import { useEffect, useState } from 'react';
-import api from '../api';
+import { useAuth } from '../context/useAuth';
+
+// One placeholder per role; later stages replace each with the real dashboard
+const HOMES = {
+  OFFICER: { title: 'Officer home', text: 'Your assigned files, due today and pending (Stage 5).', color: 'border-blue-500' },
+  SUPERVISOR: { title: 'Supervisor home', text: 'Team overdue items and escalations (Stage 9).', color: 'border-amber-500' },
+  HEAD_OFFICE: { title: 'Head office dashboard', text: 'All regions, bottlenecks and ageing (Stage 9).', color: 'border-purple-500' },
+  INSTITUTION: { title: 'Institution portal', text: 'Your applications, promises and expiring documents (Stage 6).', color: 'border-green-500' },
+};
 
 export default function Home() {
-  const [status, setStatus] = useState('Checking...');
+  const { user } = useAuth();
+  const home = HOMES[user.role];
 
-  // Done test for Stage 2: the page calls /api/health and shows API OK
-  useEffect(() => {
-    api
-      .get('/health')
-      .then((res) => setStatus(res.data.data.status === 'ok' ? 'API OK' : 'API ERROR'))
-      .catch(() => setStatus('API DOWN'));
-  }, []);
-
-  return <h1 className="text-3xl font-bold text-slate-800">{status}</h1>;
+  return (
+    <div className={`rounded border-l-4 bg-white p-6 shadow ${home.color}`}>
+      <h1 className="text-2xl font-bold text-slate-800">{home.title}</h1>
+      <p className="mt-2 text-slate-600">Welcome, {user.name}.</p>
+      <p className="mt-1 text-slate-500">{home.text}</p>
+    </div>
+  );
 }

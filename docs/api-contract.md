@@ -26,6 +26,7 @@ Error:
 | 403 | Wrong role or not the owner |
 | 404 | Not found |
 | 409 | Conflict |
+| 429 | Rate limited (login) |
 
 ## Auth contract
 
@@ -35,4 +36,7 @@ Cookie `token` (HTTP-only, same-site). After the `authenticate` middleware: `req
 
 | Method | Path | Role allowed | Request JSON | Response JSON |
 | --- | --- | --- | --- | --- |
-| GET | /api/health | any (public) | none | `{ "data": { "status": "OK" } }` |
+| GET | /api/health | any (public) | none | `{ "data": { "status": "ok" } }` |
+| POST | /api/auth/login | public | `{ "email": "", "password": "" }` | `{ "data": { "id", "name", "email", "role", "region", "institutionId", "supervisorId" } }` and sets the `token` cookie. Errors: 400, 401 `INVALID_CREDENTIALS` or `ACCOUNT_LOCKED`, 429 `RATE_LIMITED` |
+| POST | /api/auth/logout | any (no login needed) | none | `{ "data": { "loggedOut": true } }` and clears the cookie |
+| GET | /api/auth/me | any logged-in role | none | `{ "data": { "id", "name", "email", "role", "region", "institutionId", "supervisorId" } }` |

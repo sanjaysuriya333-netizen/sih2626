@@ -110,6 +110,8 @@ model User {
   supervisorId  Int?     @map("supervisor_id")
   institutionId Int?     @map("institution_id")
   active        Boolean  @default(true)
+  failedLogins  Int       @default(0) @map("failed_logins")
+  lockedUntil   DateTime? @map("locked_until")
   createdAt     DateTime @default(now()) @map("created_at")
 
   supervisor  User?        @relation("Team", fields: [supervisorId], references: [id])
