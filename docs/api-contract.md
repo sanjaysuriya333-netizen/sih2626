@@ -35,4 +35,4 @@ Cookie `token` (HTTP-only, same-site). After the `authenticate` middleware: `req
 
 | Method | Path | Role allowed | Request JSON | Response JSON |
 | --- | --- | --- | --- | --- |
-| GET | /api/health | any (public) | none | `{ "data": { "status": "OK" } }` |
+| GET | /api/health | any (public) | none | `{ "data": { "status": "ok" } }` |
