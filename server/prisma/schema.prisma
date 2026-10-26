@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+enum Role {
+  OFFICER
+  SUPERVISOR
+  HEAD_OFFICE
+  INSTITUTION
+}
+
+enum ObligationKind {
+  STAGE
+  EVC
+  UNDERTAKING
+  DOCUMENT
+}
+
+// The alert ladder. DONE is the exit from any state.
+enum ObligationState {
+  OPEN
+  REMINDER_SENT
+  DUE_TODAY
+  OVERDUE
+  ESCALATED
+  REPORTED
+  DONE
+}
+
+enum InstitutionType {
+  GOVERNMENT
+  PRIVATE
+  AUTONOMOUS
+}
+
+enum NewOrExisting {
+  NEW
+  EXISTING
+}
+
+enum ProgrammeLevel {
+  UG
+  PG
+  DIPLOMA
+}
+
+enum ApplicationStatus {
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  CLOSED
+}
+
+enum EvcStatus {
+  PLANNED
+  COMPLETED
+  CANCELLED
+}
+
+enum UndertakingStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum ProofOwnerType {
+  UNDERTAKING
+  DOCUMENT
+}
+
+enum VerifiedStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum DocumentStatus {
+  VALID
+  EXPIRED
+  REPLACED
+}
+
+enum Channel {
+  EMAIL
+  IN_APP
+  SMS
+}
+
+enum RecipientRole {
+  OWNER
+  SUPERVISOR
+  HEAD_OFFICE
+}
+
+// ---------- Tables ----------
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  role          Role
+  region        String?
+  supervisorId  Int?     @map("supervisor_id")
+  institutionId Int?     @map("institution_id")
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  supervisor  User?        @relation("Team", fields: [supervisorId], references: [id])
+  team        User[]       @relation("Team")
+  institution Institution? @relation(fields: [institutionId], references: [id])
+
+  assignedApplications Application[]
+  stageCompletions     StageHistory[]
+  verifiedUndertakings Undertaking[]
+  proofsUploaded       Proof[]
+  obligations          Obligation[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@map("users")
+}
+
+model Institution {
+  id              Int             @id @default(autoincrement())
+  name            String
+  region          String
+  state           String
+  contactEmail    String          @map("contact_email")
+  institutionType InstitutionType @map("institution_type")
+
+  users        User[]
+  applications Application[]
+
+  @@map("institutions")
+}
+
+model Route {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  active Boolean @default(true)
+
+  stages       RouteStage[]
+  applications Application[]
+
+  @@map("routes")
+}
+
+model RouteStage {
+  id        Int    @id @default(autoincrement())
+  routeId   Int    @map("route_id")
+  stageName String @map("stage_name")
+  orderNo   Int    @map("order_no")
+  maxDays   Int    @map("max_days")
+  ownerRole Role   @map("owner_role")
+
+  route        Route          @relation(fields: [routeId], references: [id])
+  applications Application[]
+  history      StageHistory[]
+
+  @@unique([routeId, orderNo])
+  @@map("route_stages")
+}
+
+model Application {
+  id                Int               @id @default(autoincrement())
+  appCode           String            @unique @map("app_code")
+  institutionId     Int               @map("institution_id")
+  routeId           Int?              @map("route_id")
+  currentStageId    Int?              @map("current_stage_id")
+  assignedOfficerId Int?              @map("assigned_officer_id")
+  status            ApplicationStatus @default(IN_PROGRESS)
+  newOrExisting     NewOrExisting     @map("new_or_existing")
+  programmeLevel    ProgrammeLevel    @map("programme_level")
+  submittedOn       DateTime          @map("submitted_on")
+  closedOn          DateTime?         @map("closed_on")
+
+  institution     Institution @relation(fields: [institutionId], references: [id])
+  route           Route?      @relation(fields: [routeId], references: [id])
+  currentStage    RouteStage? @relation(fields: [currentStageId], references: [id])
+  assignedOfficer User?       @relation(fields: [assignedOfficerId], references: [id])
+
+  history      StageHistory[]
+  evcVisits    EvcVisit[]
+  undertakings Undertaking[]
+  documents    Document[]
+  obligations  Obligation[]
+
+  @@index([assignedOfficerId, status])
+  @@map("applications")
+}
+
+model StageHistory {
+  id            Int       @id @default(autoincrement())
+  applicationId Int       @map("application_id")
+  stageId       Int       @map("stage_id")
+  enteredOn     DateTime  @map("entered_on")
+  completedOn   DateTime? @map("completed_on")
+  completedBy   Int?      @map("completed_by")
+
+  application Application @relation(fields: [applicationId], references: [id])
+  stage       RouteStage  @relation(fields: [stageId], references: [id])
+  completer   User?       @relation(fields: [completedBy], references: [id])
+
+  @@map("stage_history")
+}
+
+model EvcVisit {
+  id             Int       @id @default(autoincrement())
+  applicationId  Int       @map("application_id")
+  plannedDate    DateTime  @map("planned_date")
+  actualDate     DateTime? @map("actual_date")
+  status         EvcStatus @default(PLANNED)
+  committeeNotes String?   @map("committee_notes")
+
+  application Application @relation(fields: [applicationId], references: [id])
+
+  @@map("evc_visits")
+}
+
+model Undertaking {
+  id            Int               @id @default(autoincrement())
+  applicationId Int               @map("application_id")
+  description   String
+  dueDate       DateTime          @map("due_date")
+  status        UndertakingStatus @default(PENDING)
+  verifiedBy    Int?              @map("verified_by")
+  closedOn      DateTime?         @map("closed_on")
+
+  application Application @relation(fields: [applicationId], references: [id])
+  verifier    User?       @relation(fields: [verifiedBy], references: [id])
+
+  @@map("undertakings")
+}
+
+// owner_type + owner_id point at an undertaking or a document (no foreign key)
+model Proof {
+  id             Int            @id @default(autoincrement())
+  ownerType      ProofOwnerType @map("owner_type")
+  ownerId        Int            @map("owner_id")
+  filePath       String         @map("file_path")
+  uploadedBy     Int            @map("uploaded_by")
+  uploadedOn     DateTime       @default(now()) @map("uploaded_on")
+  verifiedStatus VerifiedStatus @default(PENDING) @map("verified_status")
+  remarks        String?
+
+  uploader User @relation(fields: [uploadedBy], references: [id])
+
+  @@map("proofs")
+}
+
+model Document {
+  id            Int            @id @default(autoincrement())
+  applicationId Int            @map("application_id")
+  docType       String         @map("doc_type")
+  validUntil    DateTime       @map("valid_until")
+  status        DocumentStatus @default(VALID)
+
+  application Application @relation(fields: [applicationId], references: [id])
+
+  @@map("documents")
+}
+
+model Obligation {
+  id             Int             @id @default(autoincrement())
+  kind           ObligationKind
+  refId          Int?            @map("ref_id")
+  applicationId  Int             @map("application_id")
+  ownerId        Int             @map("owner_id")
+  dueDate        DateTime        @map("due_date")
+  state          ObligationState @default(OPEN)
+  lastAlertLevel Int             @default(0) @map("last_alert_level")
+  closedOn       DateTime?       @map("closed_on")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  application   Application    @relation(fields: [applicationId], references: [id])
+  owner         User           @relation(fields: [ownerId], references: [id])
+  notifications Notification[]
+
+  @@index([dueDate, state])
+  @@map("obligations")
+}
+
+model AlertRule {
+  id            Int             @id @default(autoincrement())
+  kind          ObligationKind
+  daysBefore    Int             @map("days_before")
+  level         ObligationState
+  channel       Channel
+  recipientRole RecipientRole   @map("recipient_role")
+  active        Boolean         @default(true)
+
+  @@map("alert_rules")
+}
+
+model Notification {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  channel      Channel
+  subject      String
+  body         String
+  sentOn       DateTime? @map("sent_on")
+  readOn       DateTime? @map("read_on")
+  obligationId Int?      @map("obligation_id")
+
+  user       User        @relation(fields: [userId], references: [id])
+  obligation Obligation? @relation(fields: [obligationId], references: [id])
+
+  @@map("notifications")
+}
+
+model Holiday {
+  id    Int      @id @default(autoincrement())
+  date  DateTime @unique @db.Date
+  label String
+
+  @@map("holidays")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  action     String
+  entity     String
+  entityId   Int?     @map("entity_id")
+  beforeJson Json?    @map("before_json")
+  afterJson  Json?    @map("after_json")
+  at         DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_log")
+}
