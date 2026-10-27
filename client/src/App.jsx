@@ -9,6 +9,8 @@ import NewApplication from './pages/NewApplication';
 import ImportApplications from './pages/ImportApplications';
 import Evc from './pages/Evc';
 import Undertakings from './pages/Undertakings';
+import Documents from './pages/Documents';
+import Admin from './pages/Admin';
 import ComingSoon from './pages/ComingSoon';
 
 const STAFF = ['OFFICER', 'SUPERVISOR', 'HEAD_OFFICE'];
@@ -45,6 +47,15 @@ export default function App() {
           }
         />
         <Route path="/undertakings" element={<Undertakings />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute roles={['HEAD_OFFICE']}>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<ComingSoon />} />
       </Route>
     </Routes>

@@ -13,4 +13,17 @@ async function notifyInstitutionUsers(db, institutionId, { subject, body, obliga
   return users.length;
 }
 
-module.exports = { notifyInstitutionUsers };
+// The ONE function the daily job uses to send an alert.
+// deliveries = [{ userId, channel }]. Stage 7 writes IN_APP rows only; EMAIL and SMS deliveries
+// are skipped until Stage 8 replaces this body with the channel interface.
+// Returns the number of notification rows written.
+async function sendAlert(db, { deliveries, subject, body, obligationId = null }) {
+  const now = new Date();
+  const rows = deliveries
+    .filter((d) => d.channel === 'IN_APP')
+    .map((d) => ({ userId: d.userId, channel: 'IN_APP', subject, body, sentOn: now, obligationId }));
+  if (rows.length > 0) await db.notification.createMany({ data: rows });
+  return rows.length;
+}
+
+module.exports = { notifyInstitutionUsers, sendAlert };

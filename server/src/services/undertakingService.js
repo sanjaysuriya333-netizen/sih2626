@@ -3,6 +3,7 @@ const HttpError = require('../utils/httpError');
 const audit = require('./audit'); // called as audit.logAction so tests can spy on it
 const notifyService = require('./notifyService'); // same reason
 const proofFiles = require('./proofFiles');
+const documentService = require('./documentService');
 const { scopeApplications } = require('./scope');
 const { startOfUtcDay } = require('./workingDays');
 const { proofFilePath } = require('../utils/uploadDir');
@@ -171,7 +172,9 @@ async function uploadProof(user, undertakingId, file) {
 
 // Scope check, then the absolute path and type of the stored file
 async function getProofFile(user, proofId) {
-  const found = await findScopedProof(user, proofId);
+  // undertaking proofs first, then document-renewal proofs (both scope-checked)
+  const found =
+    (await findScopedProof(user, proofId)) || (await documentService.findScopedDocumentProof(user, proofId));
   if (!found) throw new HttpError(404, 'NOT_FOUND', 'Proof not found');
   const type = proofFiles.typeForStoredName(found.proof.filePath);
   if (!type) throw new HttpError(404, 'NOT_FOUND', 'Proof not found');

@@ -8,24 +8,29 @@ const MENUS = {
     { to: '/applications', label: 'My applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
   ],
   SUPERVISOR: [
     { to: '/', label: 'Team home' },
     { to: '/applications', label: 'Team applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
   ],
   HEAD_OFFICE: [
     { to: '/', label: 'Dashboard' },
     { to: '/applications', label: 'All applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
+    { to: '/admin', label: 'Daily check' },
     { to: '/settings', label: 'Settings' },
   ],
   INSTITUTION: [
     { to: '/', label: 'My institution' },
     { to: '/applications', label: 'My applications' },
     { to: '/undertakings', label: 'Promises' },
+    { to: '/documents', label: 'Documents' },
   ],
 };
 

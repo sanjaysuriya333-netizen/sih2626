@@ -29,6 +29,9 @@ Legend: ✔ = allowed within the scope above, — = not allowed.
 | Verify proof | ✔ | ✔ | ✔ | — |
 | Edit settings | — | — | ✔ | — |
 | Run daily check | — | — | ✔ | — |
+| Add document | ✔️ | ✔️ | ✔️ | ✔️ (own files) |
+| Upload document renewal | — | — | — | ✔️ |
+| Confirm document renewal | ✔️ | ✔️ | ✔️ | — |
 
 Notes: "Complete stage" for an INSTITUTION-owned stage (clarification) is done by uploading the response; the officer then completes the stage.
 
