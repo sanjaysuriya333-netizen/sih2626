@@ -3,6 +3,7 @@ const HttpError = require('../utils/httpError');
 const asyncHandler = require('../utils/asyncHandler');
 const applicationService = require('../services/applicationService');
 const stageService = require('../services/stageService');
+const queryService = require('../services/applicationQueryService');
 
 const createSchema = z.object({
   institutionId: z.number().int().positive().optional(),
@@ -35,4 +36,41 @@ exports.completeStage = asyncHandler(async (req, res) => {
   }
   const result = await stageService.completeStage(req.user, id, parsed.data);
   res.json({ data: result });
+});
+
+const listSchema = z
+  .object({
+    stage: z.string().trim().min(1).max(100).optional(),
+    status: z.enum(['IN_PROGRESS', 'APPROVED', 'REJECTED', 'CLOSED']).optional(),
+    officerId: z.coerce.number().int().positive().optional(),
+    region: z.string().trim().min(1).max(100).optional(),
+    dueFrom: z.coerce.date().optional(),
+    dueTo: z.coerce.date().optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .refine((q) => !q.dueFrom || !q.dueTo || q.dueFrom <= q.dueTo, {
+    message: 'dueFrom must not be after dueTo',
+    path: ['dueFrom'],
+  });
+
+exports.list = asyncHandler(async (req, res) => {
+  // empty query values (an unused filter box) count as "not set"
+  const query = Object.fromEntries(Object.entries(req.query).filter(([, v]) => v !== ''));
+  const parsed = listSchema.safeParse(query);
+  if (!parsed.success) {
+    throw new HttpError(400, 'VALIDATION_ERROR', 'Invalid filters', parsed.error.issues);
+  }
+  const { data, meta } = await queryService.listApplications(req.user, parsed.data);
+  res.json({ data, meta });
+});
+
+exports.getOne = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) throw new HttpError(404, 'NOT_FOUND', 'Application not found');
+  res.json({ data: await queryService.getApplication(req.user, id) });
+});
+
+exports.filters = asyncHandler(async (req, res) => {
+  res.json({ data: await queryService.getFilterOptions(req.user) });
 });
