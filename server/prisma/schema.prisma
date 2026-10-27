@@ -356,3 +356,12 @@ model AuditLog {
 
   @@map("audit_log")
 }
+
+// Minimum notice (working days) before an EVC visit can be planned
+model EvcRule {
+  id            Int     @id @default(autoincrement())
+  minNoticeDays Int     @map("min_notice_days")
+  active        Boolean @default(true)
+
+  @@map("evc_rules")
+}

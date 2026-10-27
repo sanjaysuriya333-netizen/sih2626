@@ -56,37 +56,21 @@ const HOLIDAYS = [
   ['2027-10-02', 'Gandhi Jayanti'],
 ];
 
-// Days before the due date for the first reminder, per obligation kind
-const LEAD_DAYS = { STAGE: 2, EVC: 3, UNDERTAKING: 5, DOCUMENT: 30 };
+// Days before the due date for reminders, per obligation kind (EVC: 7, 3 and 1 days)
+const LEAD_DAYS = { STAGE: [2], EVC: [7, 3, 1], UNDERTAKING: [5], DOCUMENT: [30] };
 
 // days_before: positive = before due date, 0 = on due date, negative = days AFTER due date
 function buildAlertRules() {
   const rules = [];
-  for (const [kind, lead] of Object.entries(LEAD_DAYS)) {
+  for (const [kind, leads] of Object.entries(LEAD_DAYS)) {
     for (const channel of ['EMAIL', 'IN_APP']) {
-      rules.push({
-        kind,
-        daysBefore: lead,
-        level: 'REMINDER_SENT',
-        channel,
-        recipientRole: 'OWNER',
-      });
+      for (const lead of leads) {
+        rules.push({ kind, daysBefore: lead, level: 'REMINDER_SENT', channel, recipientRole: 'OWNER' });
+      }
       rules.push({ kind, daysBefore: 0, level: 'DUE_TODAY', channel, recipientRole: 'OWNER' });
       rules.push({ kind, daysBefore: -1, level: 'OVERDUE', channel, recipientRole: 'OWNER' });
-      rules.push({
-        kind,
-        daysBefore: -3,
-        level: 'ESCALATED',
-        channel,
-        recipientRole: 'SUPERVISOR',
-      });
-      rules.push({
-        kind,
-        daysBefore: -7,
-        level: 'REPORTED',
-        channel,
-        recipientRole: 'HEAD_OFFICE',
-      });
+      rules.push({ kind, daysBefore: -3, level: 'ESCALATED', channel, recipientRole: 'SUPERVISOR' });
+      rules.push({ kind, daysBefore: -7, level: 'REPORTED', channel, recipientRole: 'HEAD_OFFICE' });
     }
   }
   return rules;

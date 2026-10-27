@@ -51,6 +51,90 @@ async function rescheduleRemaining(tx, application, next, ctx, startDate) {
   }
 }
 
+// Moves a file from `stage` to `next` (or closes it with `decision` when next is null).
+// MUST run inside a transaction: pass the transaction client as `tx`.
+// Shared by completeStage (Stage 5) and the EVC schedule/complete endpoints (Stage 6).
+// `application` is the row loaded before the transaction (needs routeId, assignedOfficerId, evcReadyOn).
+async function advanceStage(
+  tx,
+  { application, stage, next, user, now, ctx, decision, remarks, auditAction = 'STAGE_COMPLETED', auditExtra = {} },
+) {
+  const today = startOfUtcDay(now);
+
+  // Claim the move: fails if someone completed this stage a moment ago
+  const claimed = await tx.application.updateMany({
+    where: { id: application.id, currentStageId: stage.id, status: 'IN_PROGRESS' },
+    data: next
+      ? {
+          currentStageId: next.id,
+          ...(next.isEvcEntry && !application.evcReadyOn ? { evcReadyOn: now } : {}),
+        }
+      : { status: decision, closedOn: now },
+  });
+  if (claimed.count !== 1) {
+    throw new HttpError(409, 'CONFLICT', 'This stage was already completed');
+  }
+
+  // Close the open history row (create a closed one if data was inconsistent)
+  const closedRows = await tx.stageHistory.updateMany({
+    where: { applicationId: application.id, stageId: stage.id, completedOn: null },
+    data: { completedOn: now, completedBy: user.id },
+  });
+  if (closedRows.count === 0) {
+    await tx.stageHistory.create({
+      data: {
+        applicationId: application.id,
+        stageId: stage.id,
+        enteredOn: now,
+        completedOn: now,
+        completedBy: user.id,
+      },
+    });
+  }
+
+  // Close this stage's obligation
+  await tx.obligation.updateMany({
+    where: { applicationId: application.id, kind: 'STAGE', refId: stage.id, state: { not: 'DONE' } },
+    data: { state: 'DONE', closedOn: now },
+  });
+
+  if (next) {
+    await tx.stageHistory.create({
+      data: { applicationId: application.id, stageId: next.id, enteredOn: now },
+    });
+    await rescheduleRemaining(tx, application, next, ctx, today);
+  }
+
+  await logAction(
+    {
+      userId: user.id,
+      action: auditAction,
+      entity: 'application',
+      entityId: application.id,
+      before: { stageId: stage.id, status: 'IN_PROGRESS' },
+      after: {
+        nextStageId: next ? next.id : null,
+        status: next ? 'IN_PROGRESS' : decision,
+        remarks: remarks ?? null,
+        ...auditExtra,
+      },
+    },
+    tx,
+  );
+
+  return {
+    id: application.id,
+    appCode: application.appCode,
+    status: next ? 'IN_PROGRESS' : decision,
+    currentStageId: next ? next.id : stage.id,
+    nextStage: next
+      ? { id: next.id, orderNo: next.orderNo, stageName: next.stageName, ownerRole: next.ownerRole }
+      : null,
+    evcReady: Boolean(application.evcReadyOn) || Boolean(next && next.isEvcEntry),
+    closedOn: next ? null : now,
+  };
+}
+
 async function completeStage(user, applicationId, input) {
   // 1. Checks outside the transaction (scope first: out-of-scope files look like 404)
   const application = await prisma.application.findFirst({
@@ -76,83 +160,19 @@ async function completeStage(user, applicationId, input) {
     throw new HttpError(400, 'VALIDATION_ERROR', 'decision is only allowed on the last stage');
   }
 
-  const now = new Date();
-  const today = startOfUtcDay(now);
-
   // 2. All changes in ONE transaction
-  return prisma.$transaction(async (tx) => {
-    // Claim the move: fails if someone completed this stage a moment ago
-    const claimed = await tx.application.updateMany({
-      where: { id: application.id, currentStageId: stage.id, status: 'IN_PROGRESS' },
-      data: next
-        ? {
-            currentStageId: next.id,
-            ...(next.isEvcEntry && !application.evcReadyOn ? { evcReadyOn: now } : {}),
-          }
-        : { status: input.decision, closedOn: now },
-    });
-    if (claimed.count !== 1) {
-      throw new HttpError(409, 'CONFLICT', 'This stage was already completed');
-    }
-
-    // Close the open history row (create a closed one if data was inconsistent)
-    const closedRows = await tx.stageHistory.updateMany({
-      where: { applicationId: application.id, stageId: stage.id, completedOn: null },
-      data: { completedOn: now, completedBy: user.id },
-    });
-    if (closedRows.count === 0) {
-      await tx.stageHistory.create({
-        data: {
-          applicationId: application.id,
-          stageId: stage.id,
-          enteredOn: now,
-          completedOn: now,
-          completedBy: user.id,
-        },
-      });
-    }
-
-    // Close this stage's obligation
-    await tx.obligation.updateMany({
-      where: { applicationId: application.id, kind: 'STAGE', refId: stage.id, state: { not: 'DONE' } },
-      data: { state: 'DONE', closedOn: now },
-    });
-
-    if (next) {
-      await tx.stageHistory.create({
-        data: { applicationId: application.id, stageId: next.id, enteredOn: now },
-      });
-      await rescheduleRemaining(tx, application, next, ctx, today);
-    }
-
-    await logAction(
-      {
-        userId: user.id,
-        action: 'STAGE_COMPLETED',
-        entity: 'application',
-        entityId: application.id,
-        before: { stageId: stage.id, status: 'IN_PROGRESS' },
-        after: {
-          nextStageId: next ? next.id : null,
-          status: next ? 'IN_PROGRESS' : input.decision,
-          remarks: input.remarks ?? null,
-        },
-      },
-      tx,
-    );
-
-    return {
-      id: application.id,
-      appCode: application.appCode,
-      status: next ? 'IN_PROGRESS' : input.decision,
-      currentStageId: next ? next.id : stage.id,
-      nextStage: next
-        ? { id: next.id, orderNo: next.orderNo, stageName: next.stageName, ownerRole: next.ownerRole }
-        : null,
-      evcReady: Boolean(application.evcReadyOn) || Boolean(next && next.isEvcEntry),
-      closedOn: next ? null : now,
-    };
-  });
+  return prisma.$transaction((tx) =>
+    advanceStage(tx, {
+      application,
+      stage,
+      next,
+      user,
+      now: new Date(),
+      ctx,
+      decision: input.decision,
+      remarks: input.remarks,
+    }),
+  );
 }
 
-module.exports = { completeStage, canCompleteStage };
+module.exports = { completeStage, advanceStage, canCompleteStage };
