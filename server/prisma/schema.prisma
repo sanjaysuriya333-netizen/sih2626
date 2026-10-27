@@ -162,6 +162,7 @@ model RouteStage {
   orderNo   Int    @map("order_no")
   maxDays   Int    @map("max_days")
   ownerRole Role   @map("owner_role")
+  isEvcEntry Boolean @default(false) @map("is_evc_entry")
 
   route        Route          @relation(fields: [routeId], references: [id])
   applications Application[]
@@ -197,6 +198,7 @@ model Application {
   programmeLevel    ProgrammeLevel    @map("programme_level")
   submittedOn       DateTime          @map("submitted_on")
   closedOn          DateTime?         @map("closed_on")
+  evcReadyOn DateTime? @map("evc_ready_on")
 
   institution     Institution @relation(fields: [institutionId], references: [id])
   route           Route?      @relation(fields: [routeId], references: [id])

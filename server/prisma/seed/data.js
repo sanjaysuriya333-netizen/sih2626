@@ -100,5 +100,7 @@ const ROUTE_RULES = [
   { priority: 3, route: 'Only EVC', institutionTypes: [], newOrExisting: ['EXISTING'], programmeLevels: ['PG'] },
   { priority: 4, route: 'Only scrutiny', institutionTypes: [], newOrExisting: ['EXISTING'], programmeLevels: ['UG', 'DIPLOMA'] },
 ];
+// Stage names where a file enters the EVC queue (flag is stored on route_stages)
+const EVC_ENTRY_STAGE_NAMES = ['EVC scheduling'];
 
-module.exports = { REGIONS, INSTITUTION_TYPES, ROUTES, HOLIDAYS, ROUTE_RULES, buildAlertRules };
+module.exports = { REGIONS, INSTITUTION_TYPES, ROUTES, HOLIDAYS, ROUTE_RULES, buildAlertRules, EVC_ENTRY_STAGE_NAMES };
