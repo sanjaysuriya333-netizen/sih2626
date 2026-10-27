@@ -9,6 +9,7 @@ const {
   filters,
   importCsv,
 } = require('../controllers/applicationController');
+const { record: recordUndertaking } = require('../controllers/undertakingController');
 
 const ALL = ['OFFICER', 'SUPERVISOR', 'HEAD_OFFICE', 'INSTITUTION'];
 const STAFF = ['OFFICER', 'SUPERVISOR', 'HEAD_OFFICE'];
@@ -26,5 +27,8 @@ router.get('/:id', authenticate, requireRole(...ALL), getOne);
 
 // Institutions never complete stages (their reply is completed by the officer)
 router.post('/:id/stages/complete', authenticate, requireRole(...STAFF), completeStage);
+
+// Staff records a promise (undertaking) on a file within their scope
+router.post('/:id/undertakings', authenticate, requireRole(...STAFF), recordUndertaking);
 
 module.exports = router;
