@@ -6,7 +6,9 @@ const { buildSchedule } = require('./rulesEngine');
 const scheduleService = require('./scheduleService'); // called as scheduleService.persistSchedule so tests can spy on it
 const { startOfUtcDay } = require('./workingDays');
 
-// APP-2026-00001 style; takes the highest existing number for that year + 1
+// Arbitrary number used as a Postgres advisory lock key: one application is numbered at a time
+const APP_CODE_LOCK = 26262;
+
 // APP-2026-0001 style (matches the seed); highest existing number for that year + 1
 async function nextAppCode(db, year) {
   const prefix = `APP-${year}-`;
@@ -78,6 +80,8 @@ async function createApplication(user, input) {
   try {
     return await prisma.$transaction(async (tx) => {
       const assignedOfficerId = await resolveOfficer(tx, user, input, institution);
+      // Wait for any other in-flight create to commit, so we see its code (lock frees at commit/rollback)
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${APP_CODE_LOCK})`;
       const appCode = await nextAppCode(tx, submittedOn.getUTCFullYear());
       const application = await tx.application.create({
         data: {
