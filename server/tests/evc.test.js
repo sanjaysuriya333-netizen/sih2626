@@ -285,6 +285,7 @@ describe('GET /api/evc (calendar and list)', () => {
     const h = await head.get(`/api/evc${q}`);
     expect(h.body.data.map((r) => r.id)).toEqual(expect.arrayContaining([v1.id, v2.id]));
     expect((await inst.get('/api/evc')).status).toBe(403);
+    expect((await officer.get(`/api/evc?applicationId=${mine.id}`)).body.data.map((r) => r.id)).toEqual([v1.id]);
     expect((await officer.get('/api/evc?status=NOPE')).status).toBe(400);
   });
 });

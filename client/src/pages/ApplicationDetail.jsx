@@ -4,6 +4,7 @@ import api from '../api';
 import { useFetch } from '../hooks/useFetch';
 import { formatDate, formatDateTime, label } from '../utils/format';
 import StatusChip from '../components/StatusChip';
+import FileExtras from '../components/FileExtras';
 
 const DOT = { DONE: 'bg-green-500', CURRENT: 'bg-blue-600', UPCOMING: 'bg-slate-300' };
 
@@ -108,6 +109,8 @@ export default function ApplicationDetail() {
       {!data.canComplete && data.status === 'IN_PROGRESS' && data.currentStage && (
         <p className="text-sm text-slate-500">Current stage ({data.currentStage.stageName}) is owned by {label(data.currentStage.ownerRole)}; you cannot complete it.</p>
       )}
+
+      <FileExtras application={data} />
 
       <section className="rounded bg-white p-4 shadow">
         <h2 className="mb-3 font-semibold text-slate-800">Stage timeline</h2>

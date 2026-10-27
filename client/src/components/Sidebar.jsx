@@ -13,11 +13,13 @@ const MENUS = {
     { to: '/', label: 'Team home' },
     { to: '/applications', label: 'Team applications' },
     { to: '/evc', label: 'EVC visits' },
+    { to: '/undertakings', label: 'Undertakings' },
   ],
   HEAD_OFFICE: [
     { to: '/', label: 'Dashboard' },
     { to: '/applications', label: 'All applications' },
     { to: '/evc', label: 'EVC visits' },
+    { to: '/undertakings', label: 'Undertakings' },
     { to: '/settings', label: 'Settings' },
   ],
   INSTITUTION: [

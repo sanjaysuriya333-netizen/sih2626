@@ -59,9 +59,10 @@ async function listQueue(user, paging) {
 }
 
 // Visits for the calendar/list, scoped through the application
-async function listVisits(user, { from, to, status, page, pageSize }) {
+async function listVisits(user, { from, to, status, applicationId, page, pageSize }) {
   const filters = {};
   if (status) filters.status = status;
+  if (applicationId) filters.applicationId = applicationId;
   if (from || to) filters.plannedDate = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) };
   const where = { AND: [{ application: { is: scopeApplications(user) } }, filters] };
   const [total, rows] = await Promise.all([

@@ -34,7 +34,7 @@ Cookie `token` (HTTP-only, same-site). After the `authenticate` middleware: `req
 
 ## Endpoints
 
-| Method | Path | Role allowed | Request JSON | Response JSON |
+| Method | Path | Role allowed |  JSON | Response JSON |
 | --- | --- | --- | --- | --- |
 | GET | /api/health | any (public) | none | `{ "data": { "status": "ok" } }` |
 | POST | /api/auth/login | public | `{ "email": "", "password": "" }` | `{ "data": { "id", "name", "email", "role", "region", "institutionId", "supervisorId" } }` and sets the `token` cookie. Errors: 400, 401 `INVALID_CREDENTIALS` or `ACCOUNT_LOCKED`, 429 `RATE_LIMITED` |
@@ -54,3 +54,4 @@ Cookie `token` (HTTP-only, same-site). After the `authenticate` middleware: `req
 | POST | /api/undertakings/:id/proofs | INSTITUTION (own institution only) | `multipart/form-data`, one file in field `file` (PDF, JPG or PNG, max 10 MB, real type checked) | 201 `data: { proof: { id, verifiedStatus, uploadedOn }, undertaking: { id, status } }`. Errors: 400 `INVALID_FILE_TYPE`, `INVALID_FILE`, `FILE_TOO_LARGE`, `FILE_REQUIRED`, `INVALID_UPLOAD`; 401; 403; 404; 409 `ALREADY_SUBMITTED`, `NOT_OPEN` |
 | GET | /api/proofs/:id/file | all roles (scoped; institution only its own) | none | the file bytes with `Content-Type`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`. 404 if out of scope or missing |
 | POST | /api/proofs/:id/verify | OFFICER, SUPERVISOR, HEAD_OFFICE (scoped) | `{ "status": "ACCEPTED" }` or `{ "status": "REJECTED", "remarks": "text", "newDueDate": "YYYY-MM-DD" }` | 200 `data: { proof: { id, verifiedStatus, remarks }, undertaking: { id, status, dueDate, closedOn } }`. ACCEPTED closes the undertaking and obligation. REJECTED reopens both with the new due date and notifies the institution. Errors: 400; 403; 404; 409 `ALREADY_DECIDED`, `NOT_SUBMITTED` |
+| GET | /api/evc | OFFICER, SUPERVISOR, HEAD_OFFICE (scoped) | query `applicationId`, `from`, `to` (YYYY-MM-DD), `status` (PLANNED, COMPLETED, CANCELLED), `page`, `pageSize` (max 200) | `data: [{ id, applicationId, appCode, institutionName, officerName, plannedDate, actualDate, status, committeeNotes, display }]` where display is `DONE`, `LATE`, `DUE_SOON`, `PLANNED` or `CANCELLED`; `meta` |

@@ -33,6 +33,7 @@ const listQuery = z.object({
   from: dateString.optional(),
   to: dateString.optional(),
   status: z.enum(['PLANNED', 'COMPLETED', 'CANCELLED']).optional(),
+  applicationId: idSchema.optional(),
 });
 const scheduleBody = z.object({ plannedDate: dateString });
 const completeBody = z.object({
@@ -52,6 +53,7 @@ const list = asyncHandler(async (req, res) => {
     page: q.page,
     pageSize: q.pageSize,
     status: q.status,
+    applicationId: q.applicationId,
     from: q.from ? toDate(q.from) : undefined,
     to: q.to ? toDate(q.to) : undefined,
   });
