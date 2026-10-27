@@ -1,8 +1,8 @@
 import { useAuth } from '../context/useAuth';
+import OfficerHome from './OfficerHome';
 
-// One placeholder per role; later stages replace each with the real dashboard
+// Officers get the real home; the other roles keep a placeholder until Stages 6 and 9
 const HOMES = {
-  OFFICER: { title: 'Officer home', text: 'Your assigned files, due today and pending (Stage 5).', color: 'border-blue-500' },
   SUPERVISOR: { title: 'Supervisor home', text: 'Team overdue items and escalations (Stage 9).', color: 'border-amber-500' },
   HEAD_OFFICE: { title: 'Head office dashboard', text: 'All regions, bottlenecks and ageing (Stage 9).', color: 'border-purple-500' },
   INSTITUTION: { title: 'Institution portal', text: 'Your applications, promises and expiring documents (Stage 6).', color: 'border-green-500' },
@@ -10,6 +10,7 @@ const HOMES = {
 
 export default function Home() {
   const { user } = useAuth();
+  if (user.role === 'OFFICER') return <OfficerHome />;
   const home = HOMES[user.role];
 
   return (

@@ -150,23 +150,29 @@ async function getApplication(user, id) {
 }
 
 // Values for the filter dropdowns (officers are limited to the caller's scope)
+// Values for the filter dropdowns and the new-application form (limited to the caller's scope)
 async function getFilterOptions(user) {
   let officerWhere = null;
   if (user.role === 'OFFICER') officerWhere = { id: user.id };
   else if (user.role === 'SUPERVISOR') officerWhere = { role: 'OFFICER', active: true, supervisorId: user.id };
   else if (user.role === 'HEAD_OFFICE') officerWhere = { role: 'OFFICER', active: true };
 
-  const [stageRows, regionRows, officers] = await Promise.all([
+  const [stageRows, regionRows, officers, institutions] = await Promise.all([
     prisma.routeStage.findMany({ distinct: ['stageName'], orderBy: [{ orderNo: 'asc' }, { stageName: 'asc' }], select: { stageName: true } }),
     prisma.institution.findMany({ distinct: ['region'], orderBy: { region: 'asc' }, select: { region: true } }),
     officerWhere
       ? prisma.user.findMany({ where: officerWhere, orderBy: { name: 'asc' }, select: { id: true, name: true } })
       : [],
+    // institutions pick their own institution automatically, so they get no list
+    user.role === 'INSTITUTION'
+      ? []
+      : prisma.institution.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, region: true } }),
   ]);
   return {
     stages: stageRows.map((s) => s.stageName),
     regions: regionRows.map((r) => r.region),
     officers,
+    institutions,
     statuses: ['IN_PROGRESS', 'APPROVED', 'REJECTED', 'CLOSED'],
   };
 }

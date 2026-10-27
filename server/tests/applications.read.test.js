@@ -228,4 +228,10 @@ describe('GET /api/applications/filters', () => {
     expect(h.body.data.officers.length).toBeGreaterThanOrEqual(12);
     expect(h.body.data.regions.length).toBeGreaterThan(0);
   });
+
+  it('staff get the institution list for the new-application form; institutions do not', async () => {
+    const h = await head.get('/api/applications/filters');
+    expect(h.body.data.institutions).toHaveLength(await prisma.institution.count());
+    expect((await inst.get('/api/applications/filters')).body.data.institutions).toEqual([]);
+  });
 });
