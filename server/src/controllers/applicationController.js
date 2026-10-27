@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const applicationService = require('../services/applicationService');
 const stageService = require('../services/stageService');
 const queryService = require('../services/applicationQueryService');
+const importService = require('../services/importService');
 
 const createSchema = z.object({
   institutionId: z.number().int().positive().optional(),
@@ -73,4 +74,12 @@ exports.getOne = asyncHandler(async (req, res) => {
 
 exports.filters = asyncHandler(async (req, res) => {
   res.json({ data: await queryService.getFilterOptions(req.user) });
+});
+
+exports.importCsv = asyncHandler(async (req, res) => {
+  if (!req.file) throw new HttpError(400, 'FILE_REQUIRED', 'Upload a CSV file in the "file" field');
+  // the real content must be text: binary files contain zero bytes
+  if (req.file.buffer.includes(0)) throw new HttpError(400, 'INVALID_FILE', 'The file is not a text CSV');
+  const result = await importService.importApplications(req.user, req.file.buffer.toString('utf8'));
+  res.json({ data: result });
 });

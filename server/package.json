@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "reset": "prisma migrate reset --force",
+    "portal:sync": "node scripts/portalSync.js",
     "seed:check": "node prisma/checkDemo.js"
   },
   "keywords": [],

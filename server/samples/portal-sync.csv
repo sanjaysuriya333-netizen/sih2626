@@ -1,0 +1,5 @@
+institutionId,newOrExisting,programmeLevel,submittedOn,assignedOfficerEmail
+1,NEW,UG,,officer1@demo.test
+2,EXISTING,PG,,officer1@demo.test
+3,NEW,PG,,officer1@demo.test
+4,EXISTING,DIPLOMA,,officer1@demo.test
