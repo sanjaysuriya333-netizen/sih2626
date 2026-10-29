@@ -14,7 +14,9 @@
     "format": "prettier --write .",
     "reset": "prisma migrate reset --force",
     "portal:sync": "node scripts/portalSync.js",
-    "seed:check": "node prisma/checkDemo.js"
+    "seed:check": "node prisma/checkDemo.js",
+    "seed:load": "node prisma/seedLoad.js",
+    "perf:check": "node scripts/perfCheck.js"
   },
   "keywords": [],
   "author": "",

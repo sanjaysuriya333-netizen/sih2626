@@ -29,6 +29,7 @@ Legend: ✔ = allowed within the scope above, — = not allowed.
 | Verify proof | ✔ | ✔ | ✔ | — |
 | Edit settings | — | — | ✔ | — |
 | Run daily check | — | — | ✔ | — |
+| View and export reports | ✔ | ✔ | ✔ | — |
 | Add document | ✔️ | ✔️ | ✔️ | ✔️ (own files) |
 | Upload document renewal | — | — | — | ✔️ |
 | Confirm document renewal | ✔️ | ✔️ | ✔️ | — |

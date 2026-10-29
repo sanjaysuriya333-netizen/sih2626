@@ -123,6 +123,8 @@ async function runDailyCheck({ asOf, obligationIds } = {}) {
       if (out) {
         result.fired += 1;
         result.transitions.push(out);
+        // after commit: send EMAIL / SMS rows (never throws, so it cannot fail the run)
+        await notifyService.dispatchPending(prisma, { obligationId: ob.id });
       } else {
         result.skipped += 1;
       }

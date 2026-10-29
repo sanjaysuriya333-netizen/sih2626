@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
-// Menu per role. Links are placeholders until the later stages build the screens.
+// Menu per role
 const MENUS = {
   OFFICER: [
     { to: '/', label: 'My home' },
@@ -9,6 +9,7 @@ const MENUS = {
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
     { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
   ],
   SUPERVISOR: [
     { to: '/', label: 'Team home' },
@@ -16,6 +17,7 @@ const MENUS = {
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
     { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
   ],
   HEAD_OFFICE: [
     { to: '/', label: 'Dashboard' },
@@ -23,8 +25,10 @@ const MENUS = {
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
     { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
     { to: '/admin', label: 'Daily check' },
     { to: '/settings', label: 'Settings' },
+    { to: '/email-preview', label: 'Email preview' },
   ],
   INSTITUTION: [
     { to: '/', label: 'My institution' },

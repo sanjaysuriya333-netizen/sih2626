@@ -22,7 +22,8 @@ let file, officer1, owners;
 
 const run = (asOf, ids) => runDailyCheck({ asOf, obligationIds: ids });
 const reload = (ob) => prisma.obligation.findUnique({ where: { id: ob.id } });
-const notes = (ob) => prisma.notification.findMany({ where: { obligationId: ob.id }, orderBy: { id: 'asc' } });
+const notes = (ob) =>
+  prisma.notification.findMany({ where: { obligationId: ob.id, channel: 'IN_APP' }, orderBy: { id: 'asc' } });
 const audits = (ob) => prisma.auditLog.count({ where: { entity: 'obligation', entityId: ob.id } });
 const mkOb = (kind, due, extra = {}) =>
   prisma.obligation.create({
