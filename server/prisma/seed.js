@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { seedEvcReady } = require('./seed/evcReady');
 const { seedEvcRules } = require('./seed/evcRules');
+const { seedDocuments } = require('./seed/documents');
 const { PrismaClient } = require('@prisma/client');
 const { seedReference } = require('./seed/reference');
 const { seedApplications } = require('./seed/applications');
@@ -17,6 +18,7 @@ async function main() {
   await seedRouteRules(prisma);
   await seedEvcRules(prisma);
   await seedApplications(prisma, ref);
+  await seedDocuments(prisma);
   await seedEvcReady(prisma);
   console.log('Seed complete');
 }

@@ -29,6 +29,15 @@ async function main() {
     '| applications:',
     await prisma.application.count(),
   );
+  // Stage 7 info line (not part of the pass/fail check)
+  console.log(
+    'documents:',
+    await prisma.document.count(),
+    '| document obligations:',
+    await prisma.obligation.count({ where: { kind: 'DOCUMENT' } }),
+    '| DOCUMENT reminder rules (IN_APP):',
+    await prisma.alertRule.count({ where: { kind: 'DOCUMENT', level: 'REMINDER_SENT', channel: 'IN_APP' } }),
+  );
 
   const ok = Object.keys(expected).every((k) => expected[k] === result[k]);
   console.log(ok ? 'DEMO NUMBERS OK' : 'DEMO NUMBERS MISMATCH');

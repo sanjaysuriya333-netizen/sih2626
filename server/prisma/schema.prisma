@@ -275,14 +275,23 @@ model Proof {
 }
 
 model Document {
-  id            Int            @id @default(autoincrement())
-  applicationId Int            @map("application_id")
-  docType       String         @map("doc_type")
-  validUntil    DateTime       @map("valid_until")
-  status        DocumentStatus @default(VALID)
+  id                Int            @id @default(autoincrement())
+  applicationId     Int            @map("application_id")
+  docType           String         @map("doc_type")
+  validUntil        DateTime       @map("valid_until")
+  status            DocumentStatus @default(VALID)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  closedOn          DateTime?      @map("closed_on")
+  replacedById      Int?           @unique @map("replaced_by_id")
+  // the expiry the institution asked for; set while a renewal waits for the officer
+  renewalValidUntil DateTime?      @map("renewal_valid_until")
 
   application Application @relation(fields: [applicationId], references: [id])
+  replacedBy  Document?   @relation("Renewal", fields: [replacedById], references: [id])
+  replaces    Document?   @relation("Renewal")
 
+  @@index([applicationId, status])
+  @@index([validUntil, status])
   @@map("documents")
 }
 

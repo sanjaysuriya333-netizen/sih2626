@@ -24,6 +24,10 @@ const COLORS = {
   SUBMITTED: 'bg-blue-100 text-blue-800',
   VERIFIED: 'bg-green-100 text-green-800',
   ACCEPTED: 'bg-green-100 text-green-800',
+  // Documents
+  VALID: 'bg-green-100 text-green-800',
+  EXPIRED: 'bg-red-100 text-red-800',
+  REPLACED: 'bg-slate-200 text-slate-600',
 };
 
 export default function StatusChip({ value }) {

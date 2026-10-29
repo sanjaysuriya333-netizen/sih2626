@@ -57,7 +57,7 @@ const HOLIDAYS = [
 ];
 
 // Days before the due date for reminders, per obligation kind (EVC: 7, 3 and 1 days)
-const LEAD_DAYS = { STAGE: [2], EVC: [7, 3, 1], UNDERTAKING: [5], DOCUMENT: [30] };
+const LEAD_DAYS = { STAGE: [2], EVC: [7, 3, 1], UNDERTAKING: [5], DOCUMENT: [90, 60, 30] };
 
 // days_before: positive = before due date, 0 = on due date, negative = days AFTER due date
 function buildAlertRules() {

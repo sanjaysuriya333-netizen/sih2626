@@ -1,31 +1,40 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
-// Menu per role. Links are placeholders until the later stages build the screens.
+// Menu per role
 const MENUS = {
   OFFICER: [
     { to: '/', label: 'My home' },
     { to: '/applications', label: 'My applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
   ],
   SUPERVISOR: [
     { to: '/', label: 'Team home' },
     { to: '/applications', label: 'Team applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
   ],
   HEAD_OFFICE: [
     { to: '/', label: 'Dashboard' },
     { to: '/applications', label: 'All applications' },
     { to: '/evc', label: 'EVC visits' },
     { to: '/undertakings', label: 'Undertakings' },
+    { to: '/documents', label: 'Documents' },
+    { to: '/reports', label: 'Reports' },
+    { to: '/admin', label: 'Daily check' },
     { to: '/settings', label: 'Settings' },
+    { to: '/email-preview', label: 'Email preview' },
   ],
   INSTITUTION: [
     { to: '/', label: 'My institution' },
     { to: '/applications', label: 'My applications' },
     { to: '/undertakings', label: 'Promises' },
+    { to: '/documents', label: 'Documents' },
   ],
 };
 
