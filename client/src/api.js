@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-// All calls go to /api; Vite proxies them to the server in development
-const api = axios.create({ baseURL: '/api', withCredentials: true });
+// Development: /api through the Vite proxy. Split deployment: set VITE_API_URL at build time,
+// for example https://my-api.onrender.com/api
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api', withCredentials: true });
 
 export default api;

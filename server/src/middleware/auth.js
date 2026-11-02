@@ -10,7 +10,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
   let payload;
   try {
-    payload = jwt.verify(token, process.env.JWT_SECRET);
+    payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
   } catch {
     throw new HttpError(401, 'UNAUTHENTICATED', 'Session expired, please log in again');
   }

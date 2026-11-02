@@ -231,3 +231,14 @@ describe('nextStage', () => {
     expect(errorCode(() => nextStage({ routeId: null, currentStageId: null }, ctx))).toBe('NO_ROUTE');
   });
 });
+describe('nextStage: edge cases', () => {
+  it('a route id that does not exist is a 404 ROUTE_NOT_FOUND', () => {
+    expect(errorCode(() => nextStage({ routeId: 999, currentStageId: null }, makeCtx()))).toBe('ROUTE_NOT_FOUND');
+  });
+
+  it('a route with no stages gives null for a file that has not started', () => {
+    const ctx = makeCtx();
+    ctx.routes[0].stages = [];
+    expect(nextStage({ routeId: ctx.routes[0].id, currentStageId: null }, ctx)).toBeNull();
+  });
+});

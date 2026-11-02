@@ -81,3 +81,10 @@ describe('alertMessage', () => {
     expect(m.body).toContain('60 days');
   });
 });
+describe('alertMessage: unknown level', () => {
+  it('falls back to a plain text instead of failing', () => {
+    const m = alertMessage({ kind: 'STAGE', level: 'SOMETHING_NEW', label: 'Stage "X" of APP-1', dueDate: d('2027-03-10'), daysToDue: 1 });
+    expect(m.subject).toBe('Stage "X" of APP-1');
+    expect(m.body).toContain('SOMETHING_NEW');
+  });
+});

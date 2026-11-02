@@ -24,12 +24,16 @@ const publicUser = (u) => ({
   supervisorId: u.supervisorId,
 });
 
-const cookieOptions = (expires) => ({
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  expires,
-});
+// COOKIE_SAMESITE=lax (default) for one domain. Use none when client and API are on different
+// domains; browsers then require secure, so it is forced on.
+const cookieOptions = (expires) => {
+  const sameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
+  if (!['lax', 'strict', 'none'].includes(sameSite)) throw new Error('COOKIE_SAMESITE must be lax, strict or none');
+  const options = { httpOnly: true, sameSite, secure: process.env.NODE_ENV === 'production' || sameSite === 'none' };
+  if (expires) options.expires = expires;
+  return options;
+};
+exports.cookieOptions = cookieOptions;
 
 exports.login = asyncHandler(async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
@@ -84,7 +88,7 @@ exports.login = asyncHandler(async (req, res) => {
 exports.logout = asyncHandler(async (req, res) => {
   // Works even if the token has expired; log it only when we can tell who it was
   try {
-    const payload = jwt.verify(req.cookies && req.cookies.token, process.env.JWT_SECRET);
+    const payload = jwt.verify(req.cookies && req.cookies.token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     await logAction({ userId: payload.id, action: 'LOGOUT', entity: 'user', entityId: payload.id });
   } catch {
     /* no valid token: nothing to log */

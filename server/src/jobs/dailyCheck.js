@@ -22,6 +22,19 @@ function labelFor(ob, ctx) {
   return `${ctx.docTypes.get(ob.refId) ?? 'Document'} of ${code}`;
 }
 
+// Which obligations the job looks at. A STAGE obligation counts only while its file is IN_PROGRESS
+// and at that stage (the schedule creates one obligation per stage at submission, so without this
+// the job would alert for future stages). refId null is kept for obligations made without a stage.
+// Other kinds stop only when the file is REJECTED or CLOSED: undertakings and documents
+// still matter on an APPROVED file.
+function isLive(ob) {
+  const { status, currentStageId } = ob.application;
+  if (ob.kind === 'STAGE') {
+    return status === 'IN_PROGRESS' && (ob.refId == null || ob.refId === currentStageId);
+  }
+  return status !== 'REJECTED' && status !== 'CLOSED';
+}
+
 // One transition for one obligation: state change + notifications + audit row, in ONE transaction.
 // Returns null when another run got there first.
 async function applyStep(tx, ob, step, daysToDue, day, ctx) {
@@ -98,8 +111,9 @@ async function runDailyCheck({ asOf, obligationIds } = {}) {
   const obligations = await prisma.obligation.findMany({
     where: { state: { not: 'DONE' }, ...(obligationIds ? { id: { in: obligationIds } } : {}) },
     orderBy: { id: 'asc' },
-    include: { application: { select: { appCode: true } } },
+    include: { application: { select: { appCode: true, status: true, currentStageId: true } } },
   });
+  const live = obligations.filter(isLive);
 
   // Names for the notification text
   const stages = await prisma.routeStage.findMany({ select: { id: true, stageName: true } });
@@ -112,9 +126,17 @@ async function runDailyCheck({ asOf, obligationIds } = {}) {
     docTypes: new Map(docs.map((d) => [d.id, d.docType])),
   };
 
-  const result = { asOf: isoDay(day), checked: obligations.length, fired: 0, skipped: 0, failed: 0, transitions: [], failures: [] };
+  const result = {
+    asOf: isoDay(day),
+    checked: live.length,
+    fired: 0,
+    skipped: 0,
+    failed: 0,
+    transitions: [],
+    failures: [],
+  };
 
-  for (const ob of obligations) {
+  for (const ob of live) {
     const daysToDue = computeDaysToDue(ob.kind, ob.dueDate, day, holidays);
     const step = pickTransition(ladders[ob.kind] || [], daysToDue, ob.lastAlertLevel);
     if (!step) continue;

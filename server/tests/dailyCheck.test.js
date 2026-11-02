@@ -218,3 +218,70 @@ describe('daily check: failures roll back one obligation only', () => {
     expect(await notes(ob)).toHaveLength(0);
   });
 });
+
+describe('daily check: which obligations are looked at', () => {
+  it('a STAGE obligation of a stage the file has not reached is ignored', async () => {
+    const stages = await prisma.routeStage.findMany({ where: { routeId: file.routeId }, orderBy: { orderNo: 'asc' } });
+    const future = await mkOb('STAGE', DUE, { refId: stages[2].id });
+    const current = await mkOb('STAGE', DUE, { refId: file.currentStageId });
+    const res = await run(DUE, [future.id, current.id]);
+    expect(res).toMatchObject({ checked: 1, fired: 1 });
+    expect(await reload(future)).toMatchObject({ state: 'OPEN', lastAlertLevel: 0 });
+    expect((await reload(current)).lastAlertLevel).toBe(2);
+    expect(await notes(future)).toHaveLength(0);
+  });
+
+  it('rejected and closed files stop all alerts; an approved file still gets document and undertaking alerts', async () => {
+    const stage = await mkOb('STAGE', DUE);
+    const doc = await mkOb('DOCUMENT', DUE);
+    const undertaking = await mkOb('UNDERTAKING', DUE);
+    const ids = [stage.id, doc.id, undertaking.id];
+    const setStatus = (status) => prisma.application.update({ where: { id: file.id }, data: { status } });
+    try {
+      await setStatus('REJECTED');
+      expect(await run(DUE, ids)).toMatchObject({ checked: 0, fired: 0 });
+      await setStatus('CLOSED');
+      expect(await run(DUE, ids)).toMatchObject({ checked: 0, fired: 0 });
+      await setStatus('APPROVED');
+      const res = await run(DUE, ids);
+      expect(res).toMatchObject({ checked: 2, fired: 2 }); // STAGE is ignored, the other two fire
+      expect((await reload(stage)).lastAlertLevel).toBe(0);
+      expect((await reload(doc)).state).toBe('DUE_TODAY');
+      expect((await reload(undertaking)).state).toBe('DUE_TODAY');
+    } finally {
+      await setStatus('IN_PROGRESS');
+    }
+  });
+});
+describe('daily check: two runs at once', () => {
+  it('never sends one alert twice, even when two runs overlap', async () => {
+    const obs = [];
+    for (let i = 0; i < 5; i += 1) obs.push(await mkOb('STAGE', DUE));
+    const ids = obs.map((o) => o.id);
+    // Both runs read the same open obligations; the compare-and-set lets only one of them fire each
+    const [a, b] = await Promise.all([run(DUE, ids), run(DUE, ids)]);
+    expect(a.failed + b.failed).toBe(0);
+    expect(a.fired + b.fired).toBe(5);
+    for (const ob of obs) {
+      expect(await notes(ob)).toHaveLength(1);
+      expect(await reload(ob)).toMatchObject({ state: 'DUE_TODAY', lastAlertLevel: 2 });
+    }
+  });
+});
+describe('daily check: duplicate recipients', () => {
+  it('sends one message when two rules of a step reach the same person on the same channel', async () => {
+    // Settings allow this: point the EMAIL rule of the DUE_TODAY step at IN_APP, so both rules are OWNER + IN_APP
+    const rule = await prisma.alertRule.findFirst({ where: { kind: 'STAGE', daysBefore: 0, channel: 'EMAIL', active: true } });
+    expect(rule).not.toBeNull();
+    const ob = await mkOb('STAGE', DUE);
+    await prisma.alertRule.update({ where: { id: rule.id }, data: { channel: 'IN_APP' } });
+    try {
+      const res = await run(DUE, [ob.id]);
+      expect(res.fired).toBe(1);
+    } finally {
+      await prisma.alertRule.update({ where: { id: rule.id }, data: { channel: 'EMAIL' } });
+    }
+    expect(await notes(ob)).toHaveLength(1); // not two
+    expect(await prisma.notification.count({ where: { obligationId: ob.id, channel: 'EMAIL' } })).toBe(0);
+  });
+});
