@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://REPLACE-WITH-YOUR-API-HOST.onrender.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/:path*",
+      "destination": "https://sih26262-cphf.onrender.com/api/:path*"
+    }
   ]
 }
